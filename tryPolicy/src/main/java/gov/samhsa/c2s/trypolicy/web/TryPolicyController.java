@@ -17,7 +17,8 @@ public class TryPolicyController {
     @RequestMapping(value = "/tryPolicyXHTML", method = RequestMethod.GET)
     public TryPolicyResponse tryPolicyByConsentIdXHTML(@RequestParam("documentId") String documentId,
                                                        @RequestParam("consentId") String consentId,
+                                                       @RequestParam("patientId") String patientId,
                                                        @RequestParam("purposeOfUseCode") String purposeOfUseCode) {
-        return tryPolicyService.getSegmentDocXHTML(documentId, consentId, purposeOfUseCode);
+        return tryPolicyService.getSegmentDocXHTML(documentId, consentId, patientId, purposeOfUseCode);
     }
 }
