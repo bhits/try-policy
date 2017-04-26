@@ -13,6 +13,6 @@ import java.util.List;
 public interface PcmService {
 
     @RequestMapping(value = "/patients/{patientId}/consents/{consentId}/shareSensitivityCategories", method = RequestMethod.GET)
-    List<SensitivityCategoryDto> getSharedSensitivityCategories(@PathVariable String patientId, @PathVariable String consentId);
+    List<SensitivityCategoryDto> getSharedSensitivityCategories(@PathVariable("patientId") String patientId, @PathVariable("consentId") String consentId);
 
 }
