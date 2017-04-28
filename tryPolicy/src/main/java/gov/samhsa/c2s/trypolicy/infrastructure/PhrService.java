@@ -1,9 +1,10 @@
 package gov.samhsa.c2s.trypolicy.infrastructure;
 
 import gov.samhsa.c2s.trypolicy.service.dto.CCDDto;
-import org.apache.commons.codec.binary.Base64;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,11 +20,11 @@ public interface PhrService {
 
 
     //Mock Data
+    @RequestMapping(value = "/patients/{patientId}/document/{documentId}/", method = RequestMethod.GET)
     default CCDDto getCCDByDocumentId(@PathVariable("patientId") String patientId, @PathVariable("documentId") String documentId){
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource("Test_valid_CCDA1_1_CCD.xml").getFile());
-        byte[] bytes;
-        byte[] encoded = null;
+        byte[] bytes = null;
         //Load file
         try{
             InputStream is = new FileInputStream(file);
@@ -46,13 +47,12 @@ public interface PhrService {
             }
 
             is.close();
-            encoded = Base64.encodeBase64(bytes);
         } catch (IOException io){
             System.out.println("Could not completely read file "+file.getName());
         }
 
         CCDDto mockData = new CCDDto();
-        mockData.setCCDFile(encoded);
+        mockData.setCCDFile(bytes);
         return mockData;
     }
 }
