@@ -9,6 +9,7 @@ import gov.samhsa.c2s.trypolicy.config.DSSProperties;
 import gov.samhsa.c2s.trypolicy.infrastructure.DssService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PcmService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PhrService;
+import gov.samhsa.c2s.trypolicy.infrastructure.dto.SensitivityCategoryDto;
 import gov.samhsa.c2s.trypolicy.service.dto.*;
 import gov.samhsa.c2s.trypolicy.service.exception.TryPolicyException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class TryPolicyServiceImpl implements TryPolicyService {
@@ -51,14 +54,14 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     private PhrService phrService;
 
     @Override
-    public TryPolicyResponse getSegmentDocXHTML(String documentId, String consentId, String purposeOfUseCode) {
+    public TryPolicyResponse getSegmentDocXHTML(String documentId, String consentId, String patientId, String purposeOfUseCode) {
         try {
-            CCDDto ccdStrDto = pcmService.getCCDByDocumentId(documentId);
+            CCDDto ccdStrDto = phrService.getCCDByDocumentId(patientId, documentId);
             String docStr = new String(ccdStrDto.getCCDFile());
-            List<String> obligations = pcmService.getObligationsByConsentId(consentId);
+            List<SensitivityCategoryDto> sharedSensitivityCategoryDto = pcmService.getSharedSensitivityCategories(patientId, consentId);
 
-            String patientId = phrService.getPatient().getId().toString();
-            DSSRequest dssRequest = createDSSRequest(patientId, docStr, obligations, purposeOfUseCode);
+            List<String> sharedSensitivityCategoryValues = sharedSensitivityCategoryDto.stream().map(s-> s.getIdentifier().getValue()).collect(toList());
+            DSSRequest dssRequest = createDSSRequest(patientId, docStr, sharedSensitivityCategoryValues, purposeOfUseCode);
             DSSResponse response = dssService.segmentDocument(dssRequest);
             return getTaggedClinicalDocument(response);
         } catch (Exception e) {
@@ -88,7 +91,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         return tryPolicyResponse;
     }
 
-    private DSSRequest createDSSRequest(String patientId, String ccdStr, List<String> obligations, String purposeOfUse) {
+    private DSSRequest createDSSRequest(String patientId, String ccdStr, List<String> sharedSensitivityCategoryValues, String purposeOfUse) {
         DSSRequest dssRequest = new DSSRequest();
         dssRequest.setAudited(Boolean.valueOf(dssProperties.getDefaultIsAudited()));
         dssRequest.setAuditFailureByPass(Boolean.valueOf(dssProperties.getDefaultIsAuditFailureByPass()));
@@ -102,7 +105,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         xacmlResult.setPdpDecision(dssProperties.getPdpDecision());
         xacmlResult.setSubjectPurposeOfUse(SubjectPurposeOfUse.fromAbbreviation(purposeOfUse));
         xacmlResult.setPatientId(patientId);
-        xacmlResult.setPdpObligations(obligations);
+        xacmlResult.setPdpObligations(sharedSensitivityCategoryValues);
 
         dssRequest.setXacmlResult(xacmlResult);
 

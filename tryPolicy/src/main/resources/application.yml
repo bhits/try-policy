@@ -25,10 +25,6 @@ feign.hystrix.enabled: false
 hystrix.command.default.execution.timeout.enabled: false
 ribbon:
   ReadTimeout: 50000
-security:
-  oauth2:
-    client:
-      client-id: try-policy
 dss:
   segment:
     defaultIsAudited: false
