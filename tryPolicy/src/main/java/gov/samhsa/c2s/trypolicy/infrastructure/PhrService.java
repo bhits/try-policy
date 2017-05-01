@@ -15,12 +15,12 @@ import java.io.InputStream;
 public interface PhrService {
 
     //TODO: Remove mock data; Get CCD Document by calling the PHR Service
-    /*@RequestMapping(value = "/patients/{patientId}/document/{documentId}/", method = RequestMethod.GET)
+    /*@RequestMapping(value = "/patients/{patientId}/documents/{documentId}/", method = RequestMethod.GET)
     CCDDto getCCDByDocumentId(@PathVariable String("patientId") patientId, @PathVariable("documentId") String documentId);*/
 
 
     //Mock Data
-    @RequestMapping(value = "/patients/{patientId}/document/{documentId}/", method = RequestMethod.GET)
+    @RequestMapping(value = "/patients/{patientId}/documents/{documentId}/", method = RequestMethod.GET)
     default CCDDto getCCDByDocumentId(@PathVariable("patientId") String patientId, @PathVariable("documentId") String documentId){
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource("Test_valid_CCDA1_1_CCD.xml").getFile());
