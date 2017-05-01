@@ -91,7 +91,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         return tryPolicyResponse;
     }
 
-    private DSSRequest createDSSRequest(String patientId, String ccdStr, List<String> obligations, String purposeOfUse) {
+    private DSSRequest createDSSRequest(String patientId, String ccdStr, List<String> sharedSensitivityCategoryValues, String purposeOfUse) {
         DSSRequest dssRequest = new DSSRequest();
         dssRequest.setAudited(Boolean.valueOf(dssProperties.getDefaultIsAudited()));
         dssRequest.setAuditFailureByPass(Boolean.valueOf(dssProperties.getDefaultIsAuditFailureByPass()));
@@ -105,7 +105,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         xacmlResult.setPdpDecision(dssProperties.getPdpDecision());
         xacmlResult.setSubjectPurposeOfUse(SubjectPurposeOfUse.fromAbbreviation(purposeOfUse));
         xacmlResult.setPatientId(patientId);
-        xacmlResult.setPdpObligations(obligations);
+        xacmlResult.setPdpObligations(sharedSensitivityCategoryValues);
 
         dssRequest.setXacmlResult(xacmlResult);
 
