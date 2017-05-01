@@ -1,6 +1,7 @@
 package gov.samhsa.c2s.trypolicy.infrastructure;
 
 import gov.samhsa.c2s.trypolicy.service.dto.CCDDto;
+import gov.samhsa.c2s.trypolicy.service.exception.TryPolicyException;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +33,7 @@ public interface PhrService {
             long length = file.length();
             if (length > Integer.MAX_VALUE) {
                 // File is too large
+                throw new TryPolicyException("File is too large to read" +file.getName());
             }
             bytes = new byte[(int)length];
 
@@ -48,7 +50,7 @@ public interface PhrService {
 
             is.close();
         } catch (IOException io){
-            System.out.println("Could not completely read file "+file.getName());
+            throw new TryPolicyException("Could not completely read file "+file.getName() + io);
         }
 
         CCDDto mockData = new CCDDto();
