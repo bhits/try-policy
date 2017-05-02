@@ -1,19 +1,19 @@
 # Short Description
-This API allows patients to preview the redacted clinical document based on their consent.
+This service allows patients to preview the redacted clinical document based on their consent.
 
 # Full Description
 
 # Supported Source Code Tags and Current `Dockerfile` Link
 
-[`1.17.0 (latest)`](https://github.com/bhits/try-policy-api/releases/tag/1.17.0), [`1.16.0`](https://github.com/bhits/try-policy-api/releases/tag/1.16.0), [`1.13.0`](https://github.com/bhits/try-policy-api/releases/tag/1.13.0)
+[`2.0.0 (latest)`](https://github.com/bhits/try-policy/releases/tag/2.0.0)
 
-[`Current Dockerfile`](https://github.com/bhits/try-policy-api/blob/master/tryPolicy/src/main/docker/Dockerfile)
+[`Current Dockerfile`](https://github.com/bhits/try-policy/blob/master/tryPolicy/src/main/docker/Dockerfile)
 
-For more information about this image, the source code, and its history, please see the [GitHub repository](https://github.com/bhits/try-policy-api).
+For more information about this image, the source code, and its history, please see the [GitHub repository](https://github.com/bhits/try-policy).
 
 # What is Try My Policy?
 
-Try My Policy is a service that enables patients to preview the redacted version of their uploaded clinical document based on the privacy preferences of the consent. Try My Policy calls Document Segmentation Service API ([DSS](https://github.com/bhits/dss-api)) to (1) segment the patient's clinical document, in the template prescribed by C-CDA-R1, C-CDA-R2 and HITSP C32 and (2) highlight the sections that will be removed in accordance to the patient's consent. Try My Policy transforms the response from DSS into a full XHTML file and provides the Base 64 encoded file in the response JSON. This API is currently utilized in Patient Portal UI for patients to try their policies on their uploaded documents.
+Try My Policy is a service that enables patients to preview the redacted version of their uploaded clinical document based on the privacy preferences of the consent. Try My Policy calls Document Segmentation Service ([DSS](https://github.com/bhits/dss)) to (1) segment the patient's clinical document, in the template prescribed by C-CDA-R1, C-CDA-R2 and HITSP C32 and (2) highlight the sections that will be removed in accordance to the patient's consent. Try My Policy transforms the response from DSS into a full XHTML file and provides the Base 64 encoded file in the response JSON. This service is currently utilized in the Consent2Share UI (c2s-ui) for patients to try their policies on their uploaded documents.
 
 For more information and related downloads for Consent2Share, please visit [Consent2Share](https://bhits.github.io/consent2share/).
 # How to use this image
@@ -21,21 +21,21 @@ For more information and related downloads for Consent2Share, please visit [Cons
 
 ## Start a Try My Policy instance
 
-Be sure to familiarize yourself with the repository's [README.md](https://github.com/bhits/try-policy-api) file before starting the instance.
+Be sure to familiarize yourself with the repository's [README.md](https://github.com/bhits/try-policy) file before starting the instance.
 
 `docker run  --name try-policy -d bhits/try-policy:latest <additional program arguments>`
 
-*NOTE: In order for this API to fully function as a microservice in the Consent2Share application, it is required to setup the dependency microservices and support level infrastructure. Please refer to the [Consent2Share Deployment Guide](https://github.com/bhits/consent2share/releases) in the corresponding Consent2Share release for instructions to setup the Consent2Share infrastructure.*
+*NOTE: In order for this service to fully function as a microservice in the Consent2Share application, it is required to setup the dependency microservices and support level infrastructure. Please refer to the [Consent2Share Deployment Guide](https://github.com/bhits/consent2share/releases) in the corresponding Consent2Share release for instructions to setup the Consent2Share infrastructure.*
 
 ## Configure
 
 The Spring profiles `application-default` and `docker` are activated by default when building images.
 
-This API can run with the default configuration which is from three places: `bootstrap.yml`, `application.yml`, and the data which the [`Configuration Server`](https://github.com/bhits/config-server) reads from the `Configuration Data Git Repository`. Both `bootstrap.yml` and `application.yml` files are located in the class path of the running application.
+This service can run with the default configuration which is from three places: `bootstrap.yml`, `application.yml`, and the data which the [`Configuration Server`](https://github.com/bhits/config-server) reads from the `Configuration Data Git Repository`. Both `bootstrap.yml` and `application.yml` files are located in the class path of the running application.
 
 We **recommend** overriding the configuration as needed in the `Configuration Data Git Repository`, which is used by the `Configuration Server`.
 
-Also, [Spring Boot](https://projects.spring.io/spring-boot/) supports other ways to override the default configuration to configure the API for a certain deployment environment. 
+Also, [Spring Boot](https://projects.spring.io/spring-boot/) supports other ways to override the default configuration to configure the service for a certain deployment environment. 
 
 The following is an example to override the default database password:
 
@@ -73,14 +73,14 @@ Please see the [Docker installation documentation](https://docs.docker.com/engin
 
 # License
 
-View [license](https://github.com/bhits/try-policy-api/blob/master/LICENSE) information for the software contained in this image.
+View [license](https://github.com/bhits/try-policy/blob/master/LICENSE) information for the software contained in this image.
 
 # User Feedback
 
 ## Documentation 
 
-Documentation for this image is stored in the [bhits/try-policy-api](https://github.com/bhits/try-policy-api) GitHub repository. Be sure to familiarize yourself with the repository's README.md file before attempting a pull request.
+Documentation for this image is stored in the [bhits/try-policy](https://github.com/bhits/try-policy) GitHub repository. Be sure to familiarize yourself with the repository's README.md file before attempting a pull request.
 
 ## Issues
 
-If you have any problems with or questions about this image, please contact us through a [GitHub issue](https://github.com/bhits/try-policy-api/issues).
+If you have any problems with or questions about this image, please contact us through a [GitHub issue](https://github.com/bhits/try-policy/issues).
