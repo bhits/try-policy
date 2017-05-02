@@ -9,8 +9,8 @@
     <version>1.17.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>try-policy-api</name>
-    <description>Try My Policy API</description>
+    <name>try-policy</name>
+    <description>Try My Policy Service</description>
     <url>${project.scm.url}</url>
 
     <organization>
