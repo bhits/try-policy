@@ -3,6 +3,7 @@ package gov.samhsa.c2s.trypolicy.infrastructure;
 import gov.samhsa.c2s.trypolicy.service.dto.CCDDto;
 import gov.samhsa.c2s.trypolicy.service.exception.TryPolicyException;
 import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @FeignClient(name = "phr")
+@Service
 public interface PhrService {
 
     //TODO: Remove mock data; Get CCD Document by calling the PHR Service
