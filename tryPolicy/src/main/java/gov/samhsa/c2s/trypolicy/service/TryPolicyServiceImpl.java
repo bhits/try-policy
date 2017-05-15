@@ -123,7 +123,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
             return "CDA_flag_redact.xsl";
         }
         if(locale.getLanguage().equalsIgnoreCase("en")){
-            return "CDA_flag_redact_spanish.xsl";
+            return "CDA_flag_redact.xsl";
         } else if(locale.getLanguage().equalsIgnoreCase("es")){
             return "CDA_flag_redact_spanish.xsl";
         } else {
