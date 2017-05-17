@@ -2,14 +2,14 @@ package gov.samhsa.c2s.trypolicy.service.dto;
 
 import java.nio.charset.StandardCharsets;
 
-public class CCDDto {
+public class UploadedDocumentDto {
 
     private byte[] ccdFile;
 
-    public CCDDto() {
+    public UploadedDocumentDto() {
     }
 
-    public CCDDto(byte[] ccdFile) {
+    public UploadedDocumentDto(byte[] ccdFile) {
         this.ccdFile = ccdFile;
     }
 
