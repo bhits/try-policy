@@ -10,11 +10,11 @@ import gov.samhsa.c2s.trypolicy.infrastructure.DssService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PcmService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PhrService;
 import gov.samhsa.c2s.trypolicy.infrastructure.dto.SensitivityCategoryDto;
-import gov.samhsa.c2s.trypolicy.service.dto.CCDDto;
 import gov.samhsa.c2s.trypolicy.service.dto.DSSRequest;
 import gov.samhsa.c2s.trypolicy.service.dto.DSSResponse;
 import gov.samhsa.c2s.trypolicy.service.dto.SubjectPurposeOfUse;
 import gov.samhsa.c2s.trypolicy.service.dto.TryPolicyResponse;
+import gov.samhsa.c2s.trypolicy.service.dto.UploadedDocumentDto;
 import gov.samhsa.c2s.trypolicy.service.dto.XacmlResult;
 import gov.samhsa.c2s.trypolicy.service.exception.TryPolicyException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +61,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     @Override
     public TryPolicyResponse getSegmentDocXHTML(String documentId, String consentId, String patientId, String purposeOfUseCode, Locale locale) {
         try {
-            CCDDto ccdStrDto = phrService.getCCDByDocumentId(patientId, documentId);
+            UploadedDocumentDto ccdStrDto = phrService.getPatientDocument(patientId, documentId);
             String docStr = new String(ccdStrDto.getCCDFile());
             List<SensitivityCategoryDto> sharedSensitivityCategoryDto = pcmService.getSharedSensitivityCategories(patientId, consentId);
 
