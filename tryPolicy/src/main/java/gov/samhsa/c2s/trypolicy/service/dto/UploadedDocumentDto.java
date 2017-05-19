@@ -1,28 +1,21 @@
 package gov.samhsa.c2s.trypolicy.service.dto;
 
+import lombok.Data;
+
 import java.nio.charset.StandardCharsets;
 
+@Data
 public class UploadedDocumentDto {
-
-    private byte[] ccdFile;
-
-    public UploadedDocumentDto() {
-    }
-
-    public UploadedDocumentDto(byte[] ccdFile) {
-        this.ccdFile = ccdFile;
-    }
-
-    public byte[] getCCDFile() {
-        return ccdFile;
-    }
-
-    public void setCCDFile(byte[] ccdFile) {
-        this.ccdFile = ccdFile;
-    }
+    private Long documentId;
+    private String patientMrn;
+    private byte[] documentContents;
+    private String documentFileName;
+    private String documentName;
+    private String documentContentType;
+    private String documentDescription;
 
     @Override
     public String toString() {
-        return this.ccdFile == null ? "" : new String(this.getCCDFile(), StandardCharsets.UTF_8);
+        return this.documentContents == null ? "" : new String(this.getDocumentContents(), StandardCharsets.UTF_8);
     }
 }
