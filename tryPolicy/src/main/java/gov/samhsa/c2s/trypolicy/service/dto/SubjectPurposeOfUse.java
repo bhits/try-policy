@@ -36,11 +36,11 @@ public enum SubjectPurposeOfUse {
     @XmlEnumValue("TREATMENT")
     HEALTHCARE_TREATMENT("TREATMENT"),
     @XmlEnumValue("PAYMENT")
-    PAYMENT("PAYMENT"),
+    PAYMENT("HEALTHCARE PAYMENT"),
     @XmlEnumValue("EMERGENCY")
     EMERGENCY_TREATMENT("EMERGENCY"),
     @XmlEnumValue("RESEARCH")
-    RESEARCH("RESEARCH");
+    RESEARCH("HEALTHCARE RESEARCH");
 
     private final String purpose;
 
@@ -58,7 +58,8 @@ public enum SubjectPurposeOfUse {
 
     public static SubjectPurposeOfUse fromAbbreviation(String purposeOfUse) {
         for (SubjectPurposeOfUse p : SubjectPurposeOfUse.values()) {
-            if (p.getPurpose().equals(purposeOfUse)) {
+            String pou = p.getPurpose();
+            if (p.getPurpose().equalsIgnoreCase(purposeOfUse)) {
                 return p;
             }
         }

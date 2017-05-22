@@ -108,6 +108,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         xacmlResult.setHomeCommunityId(dssProperties.getHomeCommunityId());
         xacmlResult.setMessageId(UUID.randomUUID().toString());
         xacmlResult.setPdpDecision(dssProperties.getPdpDecision());
+        //TODO: Purpose of Use should come from PCM service instead of using a enum
         xacmlResult.setSubjectPurposeOfUse(SubjectPurposeOfUse.fromAbbreviation(purposeOfUse));
         xacmlResult.setPatientId(patientId);
         xacmlResult.setPdpObligations(sharedSensitivityCategoryValues);
