@@ -11,6 +11,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Service
 public interface PhrService {
 
-    @RequestMapping(value = "/uploadedDocuments/patient/{patientMrn}/document/{documentId}/", method = RequestMethod.GET)
-    UploadedDocumentDto getPatientDocument(@PathVariable("patientMrn") String patientId, @PathVariable("documentId") String documentId);
+    @RequestMapping(value = "/uploadedDocuments/patients/{patientMrn}/documents/{id}/", method = RequestMethod.GET)
+    UploadedDocumentDto getPatientDocument(@PathVariable("patientMrn") String patientId, @PathVariable("id") String documentId);
 }
