@@ -34,6 +34,10 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class TryPolicyServiceImpl implements TryPolicyService {
 
+    private final static String CDA_XSL_ENGLISH = "CDA_flag_redact.xsl";
+
+    private final static String CDA_XSL_SPANISH = "CDA_flag_redact_spanish.xsl";
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final DSSProperties dssProperties;
@@ -121,15 +125,15 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     private static String getLocaleSpecificCdaXSL(Locale locale) {
 
         if(locale == null){
-            return "CDA_flag_redact.xsl";
+            return CDA_XSL_ENGLISH;
         }
         if(locale.getLanguage().equalsIgnoreCase("en")){
-            return "CDA_flag_redact.xsl";
+            return CDA_XSL_ENGLISH;
         } else if(locale.getLanguage().equalsIgnoreCase("es")){
-            return "CDA_flag_redact_spanish.xsl";
+            return CDA_XSL_SPANISH;
         } else {
             //Default/Unsupported language
-            return "CDA_flag_redact.xsl";
+            return CDA_XSL_ENGLISH;
         }
     }
 }
