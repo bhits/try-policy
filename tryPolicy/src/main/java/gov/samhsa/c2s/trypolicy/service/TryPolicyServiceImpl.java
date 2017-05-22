@@ -62,7 +62,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     public TryPolicyResponse getSegmentDocXHTML(String documentId, String consentId, String patientId, String purposeOfUseCode, Locale locale) {
         try {
             UploadedDocumentDto ccdStrDto = phrService.getPatientDocument(patientId, documentId);
-            String docStr = new String(ccdStrDto.getDocumentContents());
+            String docStr = new String(ccdStrDto.getContents());
             List<SensitivityCategoryDto> sharedSensitivityCategoryDto = pcmService.getSharedSensitivityCategories(patientId, consentId);
 
             List<String> sharedSensitivityCategoryValues = sharedSensitivityCategoryDto.stream().map(s-> s.getIdentifier().getValue()).collect(toList());

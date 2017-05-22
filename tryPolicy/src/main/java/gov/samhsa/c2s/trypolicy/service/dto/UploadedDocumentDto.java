@@ -6,16 +6,19 @@ import java.nio.charset.StandardCharsets;
 
 @Data
 public class UploadedDocumentDto {
-    private Long documentId;
+
+    private Long id;
     private String patientMrn;
-    private byte[] documentContents;
-    private String documentFileName;
+    private byte[] contents;
+    private String fileName;
     private String documentName;
-    private String documentContentType;
-    private String documentDescription;
+    private String contentType;
+    private String description;
+    private Long documentTypeCodeId;
+    private String documentTypeDisplayName;
 
     @Override
     public String toString() {
-        return this.documentContents == null ? "" : new String(this.getDocumentContents(), StandardCharsets.UTF_8);
+        return this.contents == null ? "" : new String(this.getContents(), StandardCharsets.UTF_8);
     }
 }
