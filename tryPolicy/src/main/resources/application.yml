@@ -25,13 +25,20 @@ feign.hystrix.enabled: false
 hystrix.command.default.execution.timeout.enabled: false
 ribbon:
   ReadTimeout: 50000
-dss:
-  segment:
-    defaultIsAudited: false
-    defaultIsAuditFailureByPass: true
-    pdpDecision: PERMIT
-    homeCommunityId: dddd
-    DocumentEncoding: UTF-8
+c2s:
+  dss:
+    segment:
+      default-is-audited: false
+      default-is-audit-failure-by-pass: true
+      pdp-decision: PERMIT
+      home-community-id: dddd
+      document-encoding: UTF-8
+  try-policy:
+    sample-uploaded-documents:
+      - file-path: "defaultSampleDocs/C-CDA_R2_CCD_2_MODIFIED.xml"
+        file-name: "C-CDA_R2_CCD_2_MODIFIED.xml"
+        document-name: "Sample C-CDA R2 CCD_2 Doc"
+        content-type: "text/xml"
 ---
 spring.profiles: standalone-ssl
 spring:

@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "dss.segment")
+@ConfigurationProperties(prefix = "c2s.dss.segment")
 @Data
 public class DSSProperties {
 

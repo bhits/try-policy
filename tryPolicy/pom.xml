@@ -59,6 +59,7 @@
         <common.libraries.version>1.11.0</common.libraries.version>
         <docker.maven.version>0.4.3</docker.maven.version>
         <lombok.version>1.16.8</lombok.version>
+        <apache.commons-io.version>2.5</apache.commons-io.version>
     </properties>
 
     <dependencyManagement>
@@ -112,6 +113,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${apache.commons-io.version}</version>
         </dependency>
 
         <dependency>

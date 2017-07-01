@@ -6,23 +6,23 @@ import gov.samhsa.c2s.common.log.Logger;
 import gov.samhsa.c2s.common.log.LoggerFactory;
 import gov.samhsa.c2s.common.param.Params;
 import gov.samhsa.c2s.trypolicy.config.DSSProperties;
+import gov.samhsa.c2s.trypolicy.config.TryPolicyProperties;
 import gov.samhsa.c2s.trypolicy.infrastructure.DssService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PcmService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PhrService;
 import gov.samhsa.c2s.trypolicy.infrastructure.dto.SensitivityCategoryDto;
-import gov.samhsa.c2s.trypolicy.service.dto.DSSRequest;
-import gov.samhsa.c2s.trypolicy.service.dto.DSSResponse;
-import gov.samhsa.c2s.trypolicy.service.dto.SubjectPurposeOfUse;
-import gov.samhsa.c2s.trypolicy.service.dto.TryPolicyResponse;
-import gov.samhsa.c2s.trypolicy.service.dto.UploadedDocumentDto;
-import gov.samhsa.c2s.trypolicy.service.dto.XacmlResult;
+import gov.samhsa.c2s.trypolicy.service.dto.*;
+import gov.samhsa.c2s.trypolicy.service.exception.NoDocumentsFoundException;
 import gov.samhsa.c2s.trypolicy.service.exception.TryPolicyException;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 import javax.xml.transform.URIResolver;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
@@ -37,10 +37,14 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     private final static String CDA_XSL_ENGLISH = "CDA_flag_redact.xsl";
 
     private final static String CDA_XSL_SPANISH = "CDA_flag_redact_spanish.xsl";
+    private static final String ENGLISH_CODE = "en";
+    private static final String SPANISH_CODE = "es";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final DSSProperties dssProperties;
+
+    private final TryPolicyProperties tryPolicyProperties;
 
     private final DocumentXmlConverter documentXmlConverter;
 
@@ -53,8 +57,13 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     private final PhrService phrService;
 
     @Autowired
-    public TryPolicyServiceImpl(DSSProperties dssProperties, DocumentXmlConverter documentXmlConverter, XmlTransformer xmlTransformer, PcmService pcmService, DssService dssService, PhrService phrService) {
+    public TryPolicyServiceImpl(DSSProperties dssProperties,
+                                TryPolicyProperties tryPolicyProperties,
+                                DocumentXmlConverter documentXmlConverter,
+                                XmlTransformer xmlTransformer, PcmService pcmService,
+                                DssService dssService, PhrService phrService) {
         this.dssProperties = dssProperties;
+        this.tryPolicyProperties = tryPolicyProperties;
         this.documentXmlConverter = documentXmlConverter;
         this.xmlTransformer = xmlTransformer;
         this.pcmService = pcmService;
@@ -69,7 +78,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
             String docStr = new String(ccdStrDto.getContents());
             List<SensitivityCategoryDto> sharedSensitivityCategoryDto = pcmService.getSharedSensitivityCategories(patientId, consentId);
 
-            List<String> sharedSensitivityCategoryValues = sharedSensitivityCategoryDto.stream().map(s-> s.getIdentifier().getValue()).collect(toList());
+            List<String> sharedSensitivityCategoryValues = sharedSensitivityCategoryDto.stream().map(s -> s.getIdentifier().getValue()).collect(toList());
             DSSRequest dssRequest = createDSSRequest(patientId, docStr, sharedSensitivityCategoryValues, purposeOfUseCode);
             DSSResponse response = dssService.segmentDocument(dssRequest);
             return getTaggedClinicalDocument(response, locale);
@@ -78,6 +87,41 @@ public class TryPolicyServiceImpl implements TryPolicyService {
             logger.debug(e::getMessage, e);
             throw new TryPolicyException();
         }
+    }
+
+    @Override
+    public TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(TryPolicyRequest request) {
+        try {
+            String docStr = getSampleDocByIndexOfSampleDocuments(Integer.parseInt(request.getIndexOfDocuments()));
+            List<String> sharedSensitivityCategoryValues = pcmService.getSharedSensitivityCategories(request.getPatientId(), request.getConsentId())
+                    .stream()
+                    .map(sensitivityCategoryDto -> sensitivityCategoryDto.getIdentifier().getValue())
+                    .collect(toList());
+            DSSRequest dssRequest = createDSSRequest(request.getPatientId(), docStr, sharedSensitivityCategoryValues, request.getPurposeOfUseCode());
+            DSSResponse response = dssService.segmentDocument(dssRequest);
+            return getTaggedClinicalDocument(response, request.getLocale());
+        } catch (Exception e) {
+            logger.error(() -> "Apply TryPolicy failed: " + e.getMessage());
+            logger.debug(e::getMessage, e);
+            throw new TryPolicyException();
+        }
+    }
+
+    private String getSampleDocByIndexOfSampleDocuments(int indexOfDocuments) {
+        byte[] fileBytes;
+        try {
+            ClassPathResource classPathResource = new ClassPathResource(tryPolicyProperties
+                    .getSampleUploadedDocuments()
+                    .get(indexOfDocuments)
+                    .getFilePath());
+            InputStream sampleDocInputStream = classPathResource.getInputStream();
+            fileBytes = IOUtils.toByteArray(sampleDocInputStream);
+        } catch (Exception e) {
+            logger.error(() -> "Unable to get sample document: " + e.getMessage());
+            logger.debug(e::getMessage, e);
+            throw new NoDocumentsFoundException();
+        }
+        return new String(fileBytes);
     }
 
     private TryPolicyResponse getTaggedClinicalDocument(DSSResponse dssResponse, Locale locale) {
@@ -123,13 +167,12 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     }
 
     private static String getLocaleSpecificCdaXSL(Locale locale) {
-
-        if(locale == null){
+        if (locale == null) {
             return CDA_XSL_ENGLISH;
         }
-        if(locale.getLanguage().equalsIgnoreCase("en")){
+        if (locale.getLanguage().equalsIgnoreCase(ENGLISH_CODE)) {
             return CDA_XSL_ENGLISH;
-        } else if(locale.getLanguage().equalsIgnoreCase("es")){
+        } else if (locale.getLanguage().equalsIgnoreCase(SPANISH_CODE)) {
             return CDA_XSL_SPANISH;
         } else {
             //Default/Unsupported language
