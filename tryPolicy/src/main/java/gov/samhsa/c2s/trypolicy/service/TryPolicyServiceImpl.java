@@ -11,7 +11,14 @@ import gov.samhsa.c2s.trypolicy.infrastructure.DssService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PcmService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PhrService;
 import gov.samhsa.c2s.trypolicy.infrastructure.dto.SensitivityCategoryDto;
-import gov.samhsa.c2s.trypolicy.service.dto.*;
+import gov.samhsa.c2s.trypolicy.service.dto.DSSRequest;
+import gov.samhsa.c2s.trypolicy.service.dto.DSSResponse;
+import gov.samhsa.c2s.trypolicy.service.dto.SampleDocDto;
+import gov.samhsa.c2s.trypolicy.service.dto.SubjectPurposeOfUse;
+import gov.samhsa.c2s.trypolicy.service.dto.TryPolicyRequest;
+import gov.samhsa.c2s.trypolicy.service.dto.TryPolicyResponse;
+import gov.samhsa.c2s.trypolicy.service.dto.UploadedDocumentDto;
+import gov.samhsa.c2s.trypolicy.service.dto.XacmlResult;
 import gov.samhsa.c2s.trypolicy.service.exception.NoDocumentsFoundException;
 import gov.samhsa.c2s.trypolicy.service.exception.TryPolicyException;
 import org.apache.commons.io.IOUtils;
@@ -105,6 +112,17 @@ public class TryPolicyServiceImpl implements TryPolicyService {
             logger.debug(e::getMessage, e);
             throw new TryPolicyException();
         }
+    }
+
+    @Override
+    public List<SampleDocDto> getSampleDocuments() {
+        return tryPolicyProperties.getSampleUploadedDocuments().stream()
+                .map(sampleDocData -> SampleDocDto.builder()
+                        .documentName(sampleDocData.getDocumentName())
+                        .fileName(sampleDocData.getFileName())
+                        .contentType(sampleDocData.getContentType())
+                        .build())
+                .collect(toList());
     }
 
     private String getSampleDocByIndexOfSampleDocuments(int indexOfDocuments) {

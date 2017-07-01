@@ -15,10 +15,10 @@ import java.util.List;
 public class TryPolicyProperties {
     @NotNull
     @Valid
-    private List<SampleUploadedDocData> sampleUploadedDocuments;
+    private List<SampleDocData> sampleUploadedDocuments;
 
     @Data
-    public static class SampleUploadedDocData {
+    public static class SampleDocData {
         @NotEmpty
         private String filePath;
 
