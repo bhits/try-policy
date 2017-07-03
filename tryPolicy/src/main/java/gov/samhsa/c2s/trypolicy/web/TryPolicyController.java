@@ -2,12 +2,10 @@ package gov.samhsa.c2s.trypolicy.web;
 
 import gov.samhsa.c2s.trypolicy.service.TryPolicyService;
 import gov.samhsa.c2s.trypolicy.service.dto.SampleDocDto;
-import gov.samhsa.c2s.trypolicy.service.dto.TryPolicyRequest;
 import gov.samhsa.c2s.trypolicy.service.dto.TryPolicyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,9 +30,13 @@ public class TryPolicyController {
         return tryPolicyService.getSampleDocuments();
     }
 
-    @PostMapping("/tryPolicySampleXHTML")
-    public TryPolicyResponse tryPolicyByConsentIdXHTMLUsSampleDoc(@RequestBody TryPolicyRequest request) {
-        return tryPolicyService.getSegmentDocXHTMLUseSampleDoc(request);
+    @GetMapping("/tryPolicySampleXHTML/{patientId}/{consentId}")
+    public TryPolicyResponse tryPolicyXHTMLWithSampleDoc(@PathVariable String patientId,
+                                                                  @PathVariable String consentId,
+                                                                  @RequestParam String purposeOfUseCode,
+                                                                  @RequestParam String indexOfDocuments,
+                                                                  @RequestHeader("Accept-Language") Locale locale) {
+        return tryPolicyService.getSegmentDocXHTMLUseSampleDoc(patientId, consentId, purposeOfUseCode, indexOfDocuments, locale);
     }
 
     @RequestMapping(value = "/tryPolicyXHTML", method = RequestMethod.GET)

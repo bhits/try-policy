@@ -15,7 +15,6 @@ import gov.samhsa.c2s.trypolicy.service.dto.DSSRequest;
 import gov.samhsa.c2s.trypolicy.service.dto.DSSResponse;
 import gov.samhsa.c2s.trypolicy.service.dto.SampleDocDto;
 import gov.samhsa.c2s.trypolicy.service.dto.SubjectPurposeOfUse;
-import gov.samhsa.c2s.trypolicy.service.dto.TryPolicyRequest;
 import gov.samhsa.c2s.trypolicy.service.dto.TryPolicyResponse;
 import gov.samhsa.c2s.trypolicy.service.dto.UploadedDocumentDto;
 import gov.samhsa.c2s.trypolicy.service.dto.XacmlResult;
@@ -97,20 +96,20 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     }
 
     @Override
-    public TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(TryPolicyRequest request) {
+    public TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(String patientId, String consentId, String purposeOfUseCode, String indexOfDocuments, Locale locale) {
         try {
-            String docStr = getSampleDocByIndexOfSampleDocuments(Integer.parseInt(request.getIndexOfDocuments()));
-            List<String> sharedSensitivityCategoryValues = pcmService.getSharedSensitivityCategories(request.getPatientId(), request.getConsentId())
+            String docStr = getSampleDocByIndexOfSampleDocuments(Integer.parseInt(indexOfDocuments));
+            List<String> sharedSensitivityCategoryValues = pcmService.getSharedSensitivityCategories(patientId, consentId)
                     .stream()
                     .map(sensitivityCategoryDto -> sensitivityCategoryDto.getIdentifier().getValue())
                     .collect(toList());
-            DSSRequest dssRequest = createDSSRequest(request.getPatientId(), docStr, sharedSensitivityCategoryValues, request.getPurposeOfUseCode());
+            DSSRequest dssRequest = createDSSRequest(patientId, docStr, sharedSensitivityCategoryValues, purposeOfUseCode);
             DSSResponse response = dssService.segmentDocument(dssRequest);
-            return getTaggedClinicalDocument(response, request.getLocale());
+            return getTaggedClinicalDocument(response, locale);
         } catch (Exception e) {
             logger.error(() -> "Apply TryPolicy failed: " + e.getMessage());
             logger.debug(e::getMessage, e);
-            throw new TryPolicyException();
+            throw new TryPolicyException("Apply TryPolicy failed: " + e.getMessage());
         }
     }
 
@@ -137,7 +136,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         } catch (Exception e) {
             logger.error(() -> "Unable to get sample document: " + e.getMessage());
             logger.debug(e::getMessage, e);
-            throw new NoDocumentsFoundException();
+            throw new NoDocumentsFoundException("Unable to get sample document");
         }
         return new String(fileBytes);
     }
