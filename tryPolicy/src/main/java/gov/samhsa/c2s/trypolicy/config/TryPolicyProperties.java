@@ -23,12 +23,6 @@ public class TryPolicyProperties {
         private String filePath;
 
         @NotEmpty
-        private String fileName;
-
-        @NotEmpty
         private String documentName;
-
-        @NotEmpty
-        private String contentType;
     }
 }

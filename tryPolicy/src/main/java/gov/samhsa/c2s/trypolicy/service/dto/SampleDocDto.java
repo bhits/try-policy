@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SampleDocDto {
+    private int id;
+    private boolean isSampleDocument;
     private String documentName;
-    private String fileName;
-    private String contentType;
+    private String filePath;
 }

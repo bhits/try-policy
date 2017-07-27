@@ -11,5 +11,5 @@ public interface TryPolicyService {
 
     List<SampleDocDto> getSampleDocuments();
 
-    TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(String patientId, String consentId, String purposeOfUseCode, String indexOfDocuments, Locale locale);
+    TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(String patientId, String consentId, int documentId, String purposeOfUseCode, Locale locale);
 }

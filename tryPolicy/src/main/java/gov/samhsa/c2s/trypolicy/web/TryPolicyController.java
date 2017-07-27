@@ -30,13 +30,13 @@ public class TryPolicyController {
         return tryPolicyService.getSampleDocuments();
     }
 
-    @GetMapping("/tryPolicySampleXHTML/{patientId}/{consentId}")
+    @GetMapping("/tryPolicySampleXHTML/{patientId}")
     public TryPolicyResponse tryPolicyXHTMLWithSampleDoc(@PathVariable String patientId,
-                                                                  @PathVariable String consentId,
-                                                                  @RequestParam String purposeOfUseCode,
-                                                                  @RequestParam String indexOfDocuments,
-                                                                  @RequestHeader("Accept-Language") Locale locale) {
-        return tryPolicyService.getSegmentDocXHTMLUseSampleDoc(patientId, consentId, purposeOfUseCode, indexOfDocuments, locale);
+                                                         @RequestParam String consentId,
+                                                         @RequestParam int documentId,
+                                                         @RequestParam String purposeOfUseCode,
+                                                         @RequestHeader("Accept-Language") Locale locale) {
+        return tryPolicyService.getSegmentDocXHTMLUseSampleDoc(patientId, consentId, documentId, purposeOfUseCode, locale);
     }
 
     @RequestMapping(value = "/tryPolicyXHTML", method = RequestMethod.GET)

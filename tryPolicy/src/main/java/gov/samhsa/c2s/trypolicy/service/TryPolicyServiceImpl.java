@@ -30,6 +30,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.transform.URIResolver;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -96,9 +97,9 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     }
 
     @Override
-    public TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(String patientId, String consentId, String purposeOfUseCode, String indexOfDocuments, Locale locale) {
+    public TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(String patientId, String consentId, int documentId, String purposeOfUseCode, Locale locale) {
         try {
-            String docStr = getSampleDocByIndexOfSampleDocuments(Integer.parseInt(indexOfDocuments));
+            String docStr = getSampleDocByDocumentId(documentId);
             List<String> sharedSensitivityCategoryValues = pcmService.getSharedSensitivityCategories(patientId, consentId)
                     .stream()
                     .map(sensitivityCategoryDto -> sensitivityCategoryDto.getIdentifier().getValue())
@@ -107,38 +108,58 @@ public class TryPolicyServiceImpl implements TryPolicyService {
             DSSResponse response = dssService.segmentDocument(dssRequest);
             return getTaggedClinicalDocument(response, locale);
         } catch (Exception e) {
-            logger.error(() -> "Apply TryPolicy failed: " + e.getMessage());
+            logger.error(() -> "Apply TryPolicy failed: " + e);
             logger.debug(e::getMessage, e);
-            throw new TryPolicyException("Apply TryPolicy failed: " + e.getMessage());
+            throw new TryPolicyException("Apply TryPolicy failed: " + e);
         }
     }
 
     @Override
     public List<SampleDocDto> getSampleDocuments() {
-        return tryPolicyProperties.getSampleUploadedDocuments().stream()
+        return tryPolicyProperties.getSampleUploadedDocuments()
+                .stream()
+                .sorted(Comparator.comparing(TryPolicyProperties.SampleDocData::getFilePath))
                 .map(sampleDocData -> SampleDocDto.builder()
+                        .id(assignNegativeIndexAsDocumentId(sampleDocData))
+                        .isSampleDocument(true)
                         .documentName(sampleDocData.getDocumentName())
-                        .fileName(sampleDocData.getFileName())
-                        .contentType(sampleDocData.getContentType())
+                        .filePath(sampleDocData.getFilePath())
                         .build())
                 .collect(toList());
     }
 
-    private String getSampleDocByIndexOfSampleDocuments(int indexOfDocuments) {
-        byte[] fileBytes;
+    /**
+     * Assign negative index as unique document ID to all configured sample clinical documents
+     *
+     * @param sampleDocData
+     * @return
+     */
+    private int assignNegativeIndexAsDocumentId(TryPolicyProperties.SampleDocData sampleDocData) {
+        int indexOfSampleDocuments = tryPolicyProperties.getSampleUploadedDocuments().indexOf(sampleDocData);
+        return (indexOfSampleDocuments + 1) * -1;
+    }
+
+    private String getSampleDocByDocumentId(int documentId) {
+        String SampleDocFilePath = getSampleDocuments().stream()
+                .filter(sampleDocDto -> sampleDocDto.getId() == documentId)
+                .peek(sampleDocDto -> {
+                    if (!sampleDocDto.isSampleDocument()) {
+                        throw new NoDocumentsFoundException("The document is not sample document with DocumentId: " + documentId);
+                    }
+                })
+                .map(SampleDocDto::getFilePath)
+                .findAny()
+                .orElseThrow(NoDocumentsFoundException::new);
+
         try {
-            ClassPathResource classPathResource = new ClassPathResource(tryPolicyProperties
-                    .getSampleUploadedDocuments()
-                    .get(indexOfDocuments)
-                    .getFilePath());
+            ClassPathResource classPathResource = new ClassPathResource(SampleDocFilePath);
             InputStream sampleDocInputStream = classPathResource.getInputStream();
-            fileBytes = IOUtils.toByteArray(sampleDocInputStream);
+            return new String(IOUtils.toByteArray(sampleDocInputStream));
         } catch (Exception e) {
-            logger.error(() -> "Unable to get sample document: " + e.getMessage());
+            logger.error(() -> "Unable to get sample document: " + e);
             logger.debug(e::getMessage, e);
             throw new NoDocumentsFoundException("Unable to get sample document");
         }
-        return new String(fileBytes);
     }
 
     private TryPolicyResponse getTaggedClinicalDocument(DSSResponse dssResponse, Locale locale) {
