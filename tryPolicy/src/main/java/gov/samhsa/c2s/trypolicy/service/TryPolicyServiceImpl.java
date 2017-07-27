@@ -10,7 +10,6 @@ import gov.samhsa.c2s.trypolicy.config.TryPolicyProperties;
 import gov.samhsa.c2s.trypolicy.infrastructure.DssService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PcmService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PhrService;
-import gov.samhsa.c2s.trypolicy.infrastructure.dto.SensitivityCategoryDto;
 import gov.samhsa.c2s.trypolicy.service.dto.DSSRequest;
 import gov.samhsa.c2s.trypolicy.service.dto.DSSResponse;
 import gov.samhsa.c2s.trypolicy.service.dto.SampleDocDto;
@@ -79,32 +78,13 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     }
 
     @Override
-    public TryPolicyResponse getSegmentDocXHTML(String documentId, String consentId, String patientId, String purposeOfUseCode, Locale locale) {
+    public TryPolicyResponse getSegmentDocXHTML(String patientId, String consentId, String documentId, String purposeOfUseCode, Locale locale) {
         try {
-            UploadedDocumentDto ccdStrDto = phrService.getPatientDocument(patientId, documentId);
-            String docStr = new String(ccdStrDto.getContents());
-            List<SensitivityCategoryDto> sharedSensitivityCategoryDto = pcmService.getSharedSensitivityCategories(patientId, consentId);
-
-            List<String> sharedSensitivityCategoryValues = sharedSensitivityCategoryDto.stream().map(s -> s.getIdentifier().getValue()).collect(toList());
-            DSSRequest dssRequest = createDSSRequest(patientId, docStr, sharedSensitivityCategoryValues, purposeOfUseCode);
-            DSSResponse response = dssService.segmentDocument(dssRequest);
-            return getTaggedClinicalDocument(response, locale);
-        } catch (Exception e) {
-            logger.info(() -> "Apply TryPolicy failed: " + e.getMessage());
-            logger.debug(e::getMessage, e);
-            throw new TryPolicyException();
-        }
-    }
-
-    @Override
-    public TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(String patientId, String consentId, int documentId, String purposeOfUseCode, Locale locale) {
-        try {
-            String docStr = getSampleDocByDocumentId(documentId);
             List<String> sharedSensitivityCategoryValues = pcmService.getSharedSensitivityCategories(patientId, consentId)
                     .stream()
                     .map(sensitivityCategoryDto -> sensitivityCategoryDto.getIdentifier().getValue())
                     .collect(toList());
-            DSSRequest dssRequest = createDSSRequest(patientId, docStr, sharedSensitivityCategoryValues, purposeOfUseCode);
+            DSSRequest dssRequest = createDSSRequest(patientId, obtainDocumentByDocumentId(patientId, documentId), sharedSensitivityCategoryValues, purposeOfUseCode);
             DSSResponse response = dssService.segmentDocument(dssRequest);
             return getTaggedClinicalDocument(response, locale);
         } catch (Exception e) {
@@ -113,6 +93,8 @@ public class TryPolicyServiceImpl implements TryPolicyService {
             throw new TryPolicyException("Apply TryPolicy failed: " + e);
         }
     }
+
+
 
     @Override
     public List<SampleDocDto> getSampleDocuments() {
@@ -159,6 +141,15 @@ public class TryPolicyServiceImpl implements TryPolicyService {
             logger.error(() -> "Unable to get sample document: " + e);
             logger.debug(e::getMessage, e);
             throw new NoDocumentsFoundException("Unable to get sample document");
+        }
+    }
+
+    private String obtainDocumentByDocumentId(String patientId, String documentId) {
+        if (Integer.parseInt(documentId) < 0) {
+            return getSampleDocByDocumentId(Integer.parseInt(documentId));
+        } else {
+            UploadedDocumentDto ccdStrDto = phrService.getPatientDocument(patientId, documentId);
+            return new String(ccdStrDto.getContents());
         }
     }
 

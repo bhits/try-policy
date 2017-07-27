@@ -7,9 +7,7 @@ import java.util.List;
 import java.util.Locale;
 
 public interface TryPolicyService {
-    TryPolicyResponse getSegmentDocXHTML(String documentId, String consentId, String patientId, String purposeOfUse, Locale locale);
+    TryPolicyResponse getSegmentDocXHTML(String patientId, String consentId, String documentId, String purposeOfUse, Locale locale);
 
     List<SampleDocDto> getSampleDocuments();
-
-    TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(String patientId, String consentId, int documentId, String purposeOfUseCode, Locale locale);
 }

@@ -64,6 +64,39 @@ services:
 ```
 *NOTE: Please note that these additional arguments will be appended to the default `ENTRYPOINT` specified in the `Dockerfile` unless the `ENTRYPOINT` is overridden.*
 
+### Configuring Sample C32/C-CDA Documents
+
+The TRY can be configured to provide one or more sample C32 and/or C-CDA documents which will be made available to all patients to use when testing their consents. By default, the TRY is configured to provide a single sample document named `"Sample C-CDA R2 CCD_2 Doc.xml"` to all patients. That sample document is built into the TRY application itself, and the default `application.yml` file is set to use that built-in `"Sample C-CDA R2 CCD_2 Doc.xml"` file as the sample document for patients.
+
+To use your own file(s) as the sample document(s) for patients, override the `application.yml` file's `c2s.try-policy.sample-uploaded-documents` property as follows:
+```yml
+...
+c2s:
+  ...
+  try-policy:
+      sample-uploaded-documents:
+        - file-path: "<FULL PATH TO YOUR SAMPLE FILE, INCLUDING FILE NAME>"
+          document-name: "<NAME OF DOCUMENT TO SHOW TO USERS>"
+...
+```
+
+You can also configure TRY to provide more than one sample document. To do so, see the following example:
+```yml
+...
+c2s:
+  ...
+  try-policy:
+      sample-uploaded-documents:
+        - file-path: "/usr/local/custom_sample_docs/sample_doc_1.xml"
+          document-name: "sample_doc_1.xml"
+        - file-path: "/usr/local/custom_sample_docs/sample_doc_2.xml"
+          document-name: "sample_doc_2.xml"
+...
+```
+**IMPORTANT NOTES:**
+1. For the `file-path` property, you need to specify the entire path to your sample file **and** the file name itself (e.g. `"/usr/local/custom_sample_docs/sample_doc_1.xml"`).
+2. For the `document-name` property, this can be any user friendly string to use as the document name which is displayed to users.
+
 ### Enable SSL
 
 For simplicity in development and testing environments, SSL is **NOT** enabled by default configuration. SSL can easily be enabled following the examples below:
