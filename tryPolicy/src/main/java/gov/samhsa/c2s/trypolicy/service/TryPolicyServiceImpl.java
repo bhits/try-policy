@@ -10,7 +10,6 @@ import gov.samhsa.c2s.trypolicy.config.TryPolicyProperties;
 import gov.samhsa.c2s.trypolicy.infrastructure.DssService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PcmService;
 import gov.samhsa.c2s.trypolicy.infrastructure.PhrService;
-import gov.samhsa.c2s.trypolicy.infrastructure.dto.SensitivityCategoryDto;
 import gov.samhsa.c2s.trypolicy.service.dto.DSSRequest;
 import gov.samhsa.c2s.trypolicy.service.dto.DSSResponse;
 import gov.samhsa.c2s.trypolicy.service.dto.SampleDocDto;
@@ -22,6 +21,7 @@ import gov.samhsa.c2s.trypolicy.service.exception.NoDocumentsFoundException;
 import gov.samhsa.c2s.trypolicy.service.exception.TryPolicyException;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -30,6 +30,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.transform.URIResolver;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -78,70 +79,80 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     }
 
     @Override
-    public TryPolicyResponse getSegmentDocXHTML(String documentId, String consentId, String patientId, String purposeOfUseCode, Locale locale) {
+    public TryPolicyResponse getSegmentDocXHTML(String patientId, String consentId, String documentId, String purposeOfUseCode) {
         try {
-            UploadedDocumentDto ccdStrDto = phrService.getPatientDocument(patientId, documentId);
-            String docStr = new String(ccdStrDto.getContents());
-            List<SensitivityCategoryDto> sharedSensitivityCategoryDto = pcmService.getSharedSensitivityCategories(patientId, consentId);
-
-            List<String> sharedSensitivityCategoryValues = sharedSensitivityCategoryDto.stream().map(s -> s.getIdentifier().getValue()).collect(toList());
-            DSSRequest dssRequest = createDSSRequest(patientId, docStr, sharedSensitivityCategoryValues, purposeOfUseCode);
-            DSSResponse response = dssService.segmentDocument(dssRequest);
-            return getTaggedClinicalDocument(response, locale);
-        } catch (Exception e) {
-            logger.info(() -> "Apply TryPolicy failed: " + e.getMessage());
-            logger.debug(e::getMessage, e);
-            throw new TryPolicyException();
-        }
-    }
-
-    @Override
-    public TryPolicyResponse getSegmentDocXHTMLUseSampleDoc(String patientId, String consentId, String purposeOfUseCode, String indexOfDocuments, Locale locale) {
-        try {
-            String docStr = getSampleDocByIndexOfSampleDocuments(Integer.parseInt(indexOfDocuments));
             List<String> sharedSensitivityCategoryValues = pcmService.getSharedSensitivityCategories(patientId, consentId)
                     .stream()
                     .map(sensitivityCategoryDto -> sensitivityCategoryDto.getIdentifier().getValue())
                     .collect(toList());
-            DSSRequest dssRequest = createDSSRequest(patientId, docStr, sharedSensitivityCategoryValues, purposeOfUseCode);
+            DSSRequest dssRequest = createDSSRequest(patientId, obtainDocumentByDocumentId(patientId, documentId), sharedSensitivityCategoryValues, purposeOfUseCode);
             DSSResponse response = dssService.segmentDocument(dssRequest);
-            return getTaggedClinicalDocument(response, locale);
+            return getTaggedClinicalDocument(response);
         } catch (Exception e) {
-            logger.error(() -> "Apply TryPolicy failed: " + e.getMessage());
+            logger.error(() -> "Apply TryPolicy failed: " + e);
             logger.debug(e::getMessage, e);
-            throw new TryPolicyException("Apply TryPolicy failed: " + e.getMessage());
+            throw new TryPolicyException("Apply TryPolicy failed: " + e);
         }
     }
 
     @Override
     public List<SampleDocDto> getSampleDocuments() {
-        return tryPolicyProperties.getSampleUploadedDocuments().stream()
+        return tryPolicyProperties.getSampleUploadedDocuments()
+                .stream()
+                .sorted(Comparator.comparing(TryPolicyProperties.SampleDocData::getFilePath))
                 .map(sampleDocData -> SampleDocDto.builder()
+                        .id(assignNegativeIndexAsDocumentId(sampleDocData))
+                        .isSampleDocument(true)
                         .documentName(sampleDocData.getDocumentName())
-                        .fileName(sampleDocData.getFileName())
-                        .contentType(sampleDocData.getContentType())
+                        .filePath(sampleDocData.getFilePath())
                         .build())
                 .collect(toList());
     }
 
-    private String getSampleDocByIndexOfSampleDocuments(int indexOfDocuments) {
-        byte[] fileBytes;
+    /**
+     * Assign negative index as unique document ID to all configured sample clinical documents
+     *
+     * @param sampleDocData
+     * @return
+     */
+    private int assignNegativeIndexAsDocumentId(TryPolicyProperties.SampleDocData sampleDocData) {
+        int indexOfSampleDocuments = tryPolicyProperties.getSampleUploadedDocuments().indexOf(sampleDocData);
+        return (indexOfSampleDocuments + 1) * -1;
+    }
+
+    private String getSampleDocByDocumentId(int documentId) {
+        String SampleDocFilePath = getSampleDocuments().stream()
+                .filter(sampleDocDto -> sampleDocDto.getId() == documentId)
+                .peek(sampleDocDto -> {
+                    if (!sampleDocDto.isSampleDocument()) {
+                        throw new NoDocumentsFoundException("The document is not sample document with DocumentId: " + documentId);
+                    }
+                })
+                .map(SampleDocDto::getFilePath)
+                .findAny()
+                .orElseThrow(NoDocumentsFoundException::new);
+
         try {
-            ClassPathResource classPathResource = new ClassPathResource(tryPolicyProperties
-                    .getSampleUploadedDocuments()
-                    .get(indexOfDocuments)
-                    .getFilePath());
+            ClassPathResource classPathResource = new ClassPathResource(SampleDocFilePath);
             InputStream sampleDocInputStream = classPathResource.getInputStream();
-            fileBytes = IOUtils.toByteArray(sampleDocInputStream);
+            return new String(IOUtils.toByteArray(sampleDocInputStream));
         } catch (Exception e) {
-            logger.error(() -> "Unable to get sample document: " + e.getMessage());
+            logger.error(() -> "Unable to get sample document: " + e);
             logger.debug(e::getMessage, e);
             throw new NoDocumentsFoundException("Unable to get sample document");
         }
-        return new String(fileBytes);
     }
 
-    private TryPolicyResponse getTaggedClinicalDocument(DSSResponse dssResponse, Locale locale) {
+    private String obtainDocumentByDocumentId(String patientId, String documentId) {
+        if (Integer.parseInt(documentId) < 0) {
+            return getSampleDocByDocumentId(Integer.parseInt(documentId));
+        } else {
+            UploadedDocumentDto ccdStrDto = phrService.getPatientDocument(patientId, documentId);
+            return new String(ccdStrDto.getContents());
+        }
+    }
+
+    private TryPolicyResponse getTaggedClinicalDocument(DSSResponse dssResponse) {
         String segmentedClinicalDocument = new String(dssResponse.getTryPolicyDocument(), StandardCharsets.UTF_8);
         final Document taggedClinicalDocument = documentXmlConverter
                 .loadDocument(segmentedClinicalDocument);
@@ -153,7 +164,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         logger.info("Is Segmented CCDA document: " + dssResponse.isCCDADocument());
 
         // xslt transformation
-        final String xslUrl = Thread.currentThread().getContextClassLoader().getResource(getLocaleSpecificCdaXSL(locale)).toString();
+        final String xslUrl = Thread.currentThread().getContextClassLoader().getResource(getLocaleSpecificCdaXSL()).toString();
         final String output = xmlTransformer.transform(taggedClinicalDocument, xslUrl, Optional.<Params>empty(), Optional.<URIResolver>empty());
 
         TryPolicyResponse tryPolicyResponse = new TryPolicyResponse();
@@ -183,17 +194,23 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         return dssRequest;
     }
 
-    private static String getLocaleSpecificCdaXSL(Locale locale) {
-        if (locale == null) {
-            return CDA_XSL_ENGLISH;
+    private static String getLocaleSpecificCdaXSL() {
+        Locale selectedLocale = getLocaleFromContext();
+        switch (selectedLocale.getLanguage()) {
+            case ENGLISH_CODE:
+                return CDA_XSL_ENGLISH;
+            case SPANISH_CODE:
+                return CDA_XSL_SPANISH;
+            default:
+                return CDA_XSL_ENGLISH;
         }
-        if (locale.getLanguage().equalsIgnoreCase(ENGLISH_CODE)) {
-            return CDA_XSL_ENGLISH;
-        } else if (locale.getLanguage().equalsIgnoreCase(SPANISH_CODE)) {
-            return CDA_XSL_SPANISH;
+    }
+
+    private static Locale getLocaleFromContext() {
+        if (LocaleContextHolder.getLocale().getLanguage().isEmpty()) {
+            return Locale.US;
         } else {
-            //Default/Unsupported language
-            return CDA_XSL_ENGLISH;
+            return LocaleContextHolder.getLocale();
         }
     }
 }

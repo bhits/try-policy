@@ -41,6 +41,10 @@ The following is an example to override the default database password:
 
 `docker run -d bhitsdev/try-policy:latest --spring.datasource.password=strongpassword`
 
+### Configuring Sample C32/CCDA Documents
+
+See [`Configuring Sample C32/CCDA Documents`](../README.md#configuring-sample-c32ccda-documents) subsection of the [`README.md`](../README.md) file.
+
 ## Environment Variables
 
 When you start the Try My Policy image, you can edit the configuration of the Try My Policy instance by passing one or more environment variables on the command line. 

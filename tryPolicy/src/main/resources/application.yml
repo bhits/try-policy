@@ -36,9 +36,7 @@ c2s:
   try-policy:
     sample-uploaded-documents:
       - file-path: "defaultSampleDocs/C-CDA_R2_CCD_2_MODIFIED.xml"
-        file-name: "C-CDA_R2_CCD_2_MODIFIED.xml"
         document-name: "Sample C-CDA R2 CCD_2 Doc"
-        content-type: "text/xml"
 ---
 spring.profiles: standalone-ssl
 spring:
