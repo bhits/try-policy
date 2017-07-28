@@ -21,6 +21,7 @@ import gov.samhsa.c2s.trypolicy.service.exception.NoDocumentsFoundException;
 import gov.samhsa.c2s.trypolicy.service.exception.TryPolicyException;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -78,7 +79,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     }
 
     @Override
-    public TryPolicyResponse getSegmentDocXHTML(String patientId, String consentId, String documentId, String purposeOfUseCode, Locale locale) {
+    public TryPolicyResponse getSegmentDocXHTML(String patientId, String consentId, String documentId, String purposeOfUseCode) {
         try {
             List<String> sharedSensitivityCategoryValues = pcmService.getSharedSensitivityCategories(patientId, consentId)
                     .stream()
@@ -86,15 +87,13 @@ public class TryPolicyServiceImpl implements TryPolicyService {
                     .collect(toList());
             DSSRequest dssRequest = createDSSRequest(patientId, obtainDocumentByDocumentId(patientId, documentId), sharedSensitivityCategoryValues, purposeOfUseCode);
             DSSResponse response = dssService.segmentDocument(dssRequest);
-            return getTaggedClinicalDocument(response, locale);
+            return getTaggedClinicalDocument(response);
         } catch (Exception e) {
             logger.error(() -> "Apply TryPolicy failed: " + e);
             logger.debug(e::getMessage, e);
             throw new TryPolicyException("Apply TryPolicy failed: " + e);
         }
     }
-
-
 
     @Override
     public List<SampleDocDto> getSampleDocuments() {
@@ -153,7 +152,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         }
     }
 
-    private TryPolicyResponse getTaggedClinicalDocument(DSSResponse dssResponse, Locale locale) {
+    private TryPolicyResponse getTaggedClinicalDocument(DSSResponse dssResponse) {
         String segmentedClinicalDocument = new String(dssResponse.getTryPolicyDocument(), StandardCharsets.UTF_8);
         final Document taggedClinicalDocument = documentXmlConverter
                 .loadDocument(segmentedClinicalDocument);
@@ -165,7 +164,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         logger.info("Is Segmented CCDA document: " + dssResponse.isCCDADocument());
 
         // xslt transformation
-        final String xslUrl = Thread.currentThread().getContextClassLoader().getResource(getLocaleSpecificCdaXSL(locale)).toString();
+        final String xslUrl = Thread.currentThread().getContextClassLoader().getResource(getLocaleSpecificCdaXSL()).toString();
         final String output = xmlTransformer.transform(taggedClinicalDocument, xslUrl, Optional.<Params>empty(), Optional.<URIResolver>empty());
 
         TryPolicyResponse tryPolicyResponse = new TryPolicyResponse();
@@ -195,17 +194,23 @@ public class TryPolicyServiceImpl implements TryPolicyService {
         return dssRequest;
     }
 
-    private static String getLocaleSpecificCdaXSL(Locale locale) {
-        if (locale == null) {
-            return CDA_XSL_ENGLISH;
+    private static String getLocaleSpecificCdaXSL() {
+        Locale selectedLocale = getLocaleFromContext();
+        switch (selectedLocale.getLanguage()) {
+            case ENGLISH_CODE:
+                return CDA_XSL_ENGLISH;
+            case SPANISH_CODE:
+                return CDA_XSL_SPANISH;
+            default:
+                return CDA_XSL_ENGLISH;
         }
-        if (locale.getLanguage().equalsIgnoreCase(ENGLISH_CODE)) {
-            return CDA_XSL_ENGLISH;
-        } else if (locale.getLanguage().equalsIgnoreCase(SPANISH_CODE)) {
-            return CDA_XSL_SPANISH;
+    }
+
+    private static Locale getLocaleFromContext() {
+        if (LocaleContextHolder.getLocale().getLanguage().isEmpty()) {
+            return Locale.US;
         } else {
-            //Default/Unsupported language
-            return CDA_XSL_ENGLISH;
+            return LocaleContextHolder.getLocale();
         }
     }
 }

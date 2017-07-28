@@ -6,12 +6,10 @@ import gov.samhsa.c2s.trypolicy.service.dto.TryPolicyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Locale;
 
 @RestController
 public class TryPolicyController {
@@ -32,8 +30,7 @@ public class TryPolicyController {
     public TryPolicyResponse tryPolicyByConsentIdXHTML(@PathVariable String patientId,
                                                        @RequestParam String consentId,
                                                        @RequestParam String documentId,
-                                                       @RequestParam String purposeOfUseCode,
-                                                       @RequestHeader("Accept-Language") Locale locale) {
-        return tryPolicyService.getSegmentDocXHTML(patientId, consentId, documentId, purposeOfUseCode, locale);
+                                                       @RequestParam String purposeOfUseCode) {
+        return tryPolicyService.getSegmentDocXHTML(patientId, consentId, documentId, purposeOfUseCode);
     }
 }
