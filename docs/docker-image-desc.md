@@ -5,9 +5,9 @@ This service allows patients to preview the redacted clinical document based on 
 
 # Supported Source Code Tags and Current `Dockerfile` Link
 
-[`2.0.0 (latest)`](https://github.com/bhits-dev/try-policy/releases/tag/2.0.0)
+[`2.1.0 (latest)`](https://github.com/bhits-dev/try-policy/releases/tag/2.1.0), [`2.0.0`](https://github.com/bhits-dev/try-policy/releases/tag/2.0.0)
 
-[`Current Dockerfile`](https://github.com/bhits-dev/try-policy/blob/master/tryPolicy/src/main/docker/Dockerfile)
+[`Current Dockerfile`](../tryPolicy/src/main/docker/Dockerfile)
 
 For more information about this image, the source code, and its history, please see the [GitHub repository](https://github.com/bhits-dev/try-policy).
 
