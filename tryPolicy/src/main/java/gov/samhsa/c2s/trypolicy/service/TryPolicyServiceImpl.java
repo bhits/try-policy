@@ -28,6 +28,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 import javax.xml.transform.URIResolver;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
@@ -121,7 +123,7 @@ public class TryPolicyServiceImpl implements TryPolicyService {
     }
 
     private String getSampleDocByDocumentId(int documentId) {
-        String SampleDocFilePath = getSampleDocuments().stream()
+        String sampleDocFilePath = getSampleDocuments().stream()
                 .filter(sampleDocDto -> sampleDocDto.getId() == documentId)
                 .peek(sampleDocDto -> {
                     if (!sampleDocDto.isSampleDocument()) {
@@ -132,12 +134,17 @@ public class TryPolicyServiceImpl implements TryPolicyService {
                 .findAny()
                 .orElseThrow(NoDocumentsFoundException::new);
 
-        try {
-            ClassPathResource classPathResource = new ClassPathResource(SampleDocFilePath);
-            InputStream sampleDocInputStream = classPathResource.getInputStream();
+        ClassPathResource classPathResource = new ClassPathResource(sampleDocFilePath);
+
+        try (InputStream sampleDocInputStream = classPathResource.getInputStream()) {
             return new String(IOUtils.toByteArray(sampleDocInputStream));
-        } catch (Exception e) {
-            logger.error(() -> "Unable to get sample document: " + e);
+        } catch (IOException e) {
+            if (e instanceof FileNotFoundException) {
+                logger.error(() -> "The requested sample document file could not be found or does not exist: " + sampleDocFilePath);
+            } else {
+                logger.error(() -> "Unable to get sample document: " + sampleDocFilePath);
+            }
+
             logger.debug(e::getMessage, e);
             throw new NoDocumentsFoundException("Unable to get sample document");
         }
