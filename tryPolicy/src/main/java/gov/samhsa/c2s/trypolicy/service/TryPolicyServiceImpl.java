@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.trypolicy.service;
 
+import feign.FeignException;
 import gov.samhsa.c2s.common.document.converter.DocumentXmlConverter;
 import gov.samhsa.c2s.common.document.transformer.XmlTransformer;
 import gov.samhsa.c2s.common.log.Logger;
@@ -65,6 +66,8 @@ public class TryPolicyServiceImpl implements TryPolicyService {
 
     private final PhrService phrService;
 
+    private DSSRequest dssRequest;
+
     @Autowired
     public TryPolicyServiceImpl(DSSProperties dssProperties,
                                 TryPolicyProperties tryPolicyProperties,
@@ -87,13 +90,35 @@ public class TryPolicyServiceImpl implements TryPolicyService {
                     .stream()
                     .map(sensitivityCategoryDto -> sensitivityCategoryDto.getIdentifier().getValue())
                     .collect(toList());
-            DSSRequest dssRequest = createDSSRequest(patientId, obtainDocumentByDocumentId(patientId, documentId), sharedSensitivityCategoryValues, purposeOfUseCode);
-            DSSResponse response = dssService.segmentDocument(dssRequest);
+            this.dssRequest = createDSSRequest(patientId, obtainDocumentByDocumentId(patientId, documentId), sharedSensitivityCategoryValues, purposeOfUseCode);
+        } catch (FeignException fe) {
+            int causedByStatus = fe.status();
+            switch (causedByStatus) {
+                case 404:
+                    logger.error(() -> "Consent not found for the given patientId and ConsentId: " + fe);
+                    logger.debug(fe::getMessage, fe);
+                    throw new TryPolicyException("Consent not found for the given patientId and ConsentId" + fe);
+                default:
+                    logger.error(() -> "Connect PcmService failed: " + fe);
+                    logger.debug(fe::getMessage, fe);
+                    throw new TryPolicyException("Connect PcmService failed" + fe);
+            }
+        }
+        try {
+            DSSResponse response = this.dssService.segmentDocument(this.dssRequest);
             return getTaggedClinicalDocument(response);
-        } catch (Exception e) {
-            logger.error(() -> "Apply TryPolicy failed: " + e);
-            logger.debug(e::getMessage, e);
-            throw new TryPolicyException("Apply TryPolicy failed: " + e);
+        } catch (FeignException fe) {
+            int causedByStatus = fe.status();
+            switch (causedByStatus) {
+                case 500:
+                    logger.error(() -> "Document Segmentation failed: " + fe);
+                    logger.debug(fe::getMessage, fe);
+                    throw new TryPolicyException("Document Segmentation failed: " + fe);
+                default:
+                    logger.error(() -> "Document Segmentation failed: " + fe);
+                    logger.debug(fe::getMessage, fe);
+                    throw new TryPolicyException("Document Segmentation failed: " + fe);
+            }
         }
     }
 
