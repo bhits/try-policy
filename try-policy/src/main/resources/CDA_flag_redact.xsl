@@ -937,7 +937,7 @@
                                 <div class="col-xs-4 col-sm-2 div-cell narr_header">
                                     <span>
                                         <!--<xsl:text>Information recipient:</xsl:text>-->
-                                        <xsl:value-of select="language.infoRecipient"></xsl:value-of>
+                                        <xsl:value-of select="$lang.infoRecipient"></xsl:value-of>
                                     </span>
                                 </div>
                                 <div class="col-xs-8 col-sm-10 div-cell narr_row">
